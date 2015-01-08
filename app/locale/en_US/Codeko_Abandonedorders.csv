@@ -10,7 +10,7 @@
 "Enable Abandonedorder system of payment method", "Enable Abandonedorder system of payment method"
 "Minutes after an order is considered abandoned and canceled", "Minutes after an order is considered abandoned and canceled"
 "No cancel order with this payment method", "No cancel order with this payment method"
-"No process", "No process"
+"Ignore", "Ignore"
 "Order auto canceled", "Order auto canceled"
 "Order States to be cancel", "Order States to be cancel"
 "Please select", "Please select"

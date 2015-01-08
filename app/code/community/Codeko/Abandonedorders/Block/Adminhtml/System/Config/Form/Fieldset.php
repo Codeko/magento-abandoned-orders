@@ -95,7 +95,7 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
                     'value' => $helper::PAYMENT_VALUE_EMPTY
                 ),
                 array(
-                    'label' => Mage::helper('codeko_abandonedorders')->__('No process'),
+                    'label' => Mage::helper('codeko_abandonedorders')->__('Ignore'),
                     'value' => $helper::PAYMENT_VALUE_NO_PROCESS
                 ),
                 array(
