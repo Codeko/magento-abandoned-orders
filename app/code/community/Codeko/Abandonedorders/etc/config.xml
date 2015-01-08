@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<config>
+    <modules>
+        <Codeko_Abandonedorders>
+            <version>1.0.0</version>
+        </Codeko_Abandonedorders>
+    </modules>
+    <global>
+        <blocks>
+            <codeko_abandonedorders>
+                <class>Codeko_Abandonedorders_Block</class>
+            </codeko_abandonedorders>
+        </blocks>
+        <models>
+            <codeko_abandonedorders>
+                <class>Codeko_Abandonedorders_Model</class>
+            </codeko_abandonedorders>
+        </models>
+        <helpers>
+            <codeko_abandonedorders>
+                <class>Codeko_Abandonedorders_Helper</class>
+            </codeko_abandonedorders>
+        </helpers>
+        <events>
+            <admin_system_config_changed_section_codeko_abandonedorders>
+                <observers>
+                    <codeko_abandonedorders>
+                        <type>singleton</type>
+                        <class>codeko_abandonedorders/observer</class>
+                        <method>setCronSchedule</method>
+                    </codeko_abandonedorders>
+                </observers>
+            </admin_system_config_changed_section_codeko_abandonedorders>
+        </events>
+    </global>
+    <fronted>
+        <translate>
+            <modules>
+                <Codeko_Abandonedorders>
+                    <files>
+                        <default>Codeko_Abandonedorders.csv</default>
+                    </files>
+                </Codeko_Abandonedorders>
+            </modules>
+        </translate>
+    </fronted>
+    <default>
+        <codeko_abandonedorders>
+            <status_settings>
+                <new_order_status>auto_canceled</new_order_status>
+            </status_settings>
+            <basic_settings>
+                <cron_expr>*/5 * * * *</cron_expr>
+            </basic_settings>
+        </codeko_abandonedorders>
+    </default>
+    <adminhtml>
+        <acl>
+            <resources>
+                <all>
+                    <title>Allow Everything</title>
+                </all>
+                <admin>
+                    <children>
+                        <system>
+                            <children>
+                                <config>
+                                    <children>
+                                        <codeko_abandonedorders>
+                                            <title>Abandoned Orders</title>
+                                        </codeko_abandonedorders>
+                                    </children>
+                                </config>
+                            </children>
+                        </system>
+                    </children>
+                </admin>
+            </resources>
+        </acl>
+        <translate>
+            <modules>
+                <Codeko_Abandonedorders>
+                    <files>
+                        <default>Codeko_Abandonedorders.csv</default>
+                    </files>
+                </Codeko_Abandonedorders>
+            </modules>
+        </translate>
+    </adminhtml>
+
+    <crontab>
+        <jobs>
+            <codeko_abandonedorders>
+                <schedule>
+                    <config_path>codeko_abandonedorders/basic_settings/cron_expr</config_path>
+                </schedule>
+                <run>
+                    <model>codeko_abandonedorders/observer::cancelAbandonedOrders</model>
+                </run>
+            </codeko_abandonedorders>
+        </jobs>
+    </crontab>
+</config>
+
+
+

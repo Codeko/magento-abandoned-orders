@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <sections>
+        <codeko_abandonedorders translate="label" module="codeko_abandonedorders">
+            <label>Abandoned Orders</label>
+            <tab>sales</tab>
+            <sort_order>1000</sort_order>
+            <show_in_default>1</show_in_default>
+            <show_in_website>1</show_in_website>
+            <show_in_store>1</show_in_store>
+
+            <groups>
+                <basic_settings translate="label" module="codeko_abandonedorders">
+                    <label>Basic Settings</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>10</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <enabled translate="label">
+                            <label>Enabled</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>10</sort_order>
+                            <comment>Enabled Abandonedorder system</comment>
+                            <show_in_default>1</show_in_default>
+                        </enabled>
+                        <minutes translate="label">
+                            <label>Default Minutes cancel</label>
+                            <frontend_type>text</frontend_type>
+                            <validate>validate-digits required-entry validate-digits-range digits-range-0-6000</validate>
+                            <sort_order>20</sort_order>
+                            <comment>Minutes after an order is considered abandoned and canceled</comment>
+                            <show_in_default>1</show_in_default>
+                        </minutes>
+                    </fields>
+                </basic_settings>
+
+                <status_settings translate="label" module="codeko_abandonedorders">
+                    <label>Status Settings</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>20</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <abandoned_order_states translate="label">
+                            <label>Order States to be cancel</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <source_model>codeko_abandonedorders/adminhtml_system_config_source_states</source_model>
+                            <sort_order>10</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </abandoned_order_states>
+                        <new_order_status translate="label">
+                            <label>Cancel status</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_order_status</source_model>
+                            <sort_order>20</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </new_order_status>
+                    </fields>
+                </status_settings>
+
+                <payments translate="label" module="codeko_abandonedorders">
+                    <label>Custom settings by payment methods</label>
+                    <frontend_type>text</frontend_type>
+                    <frontend_model>codeko_abandonedorders/adminhtml_system_config_form_fieldset</frontend_model>
+                    <sort_order>30</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                </payments>
+
+            </groups>
+        </codeko_abandonedorders>
+    </sections>
+</config>
