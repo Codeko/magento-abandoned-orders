@@ -23,11 +23,11 @@
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <sort_order>10</sort_order>
-                            <comment>Enabled Abandonedorder system</comment>
+                            <comment>Enable Abandoned Orders module</comment>
                             <show_in_default>1</show_in_default>
                         </enabled>
                         <minutes translate="label">
-                            <label>Default Minutes cancel</label>
+                            <label>Cancel after</label>
                             <frontend_type>text</frontend_type>
                             <validate>validate-digits required-entry validate-digits-range digits-range-0-6000</validate>
                             <sort_order>20</sort_order>
