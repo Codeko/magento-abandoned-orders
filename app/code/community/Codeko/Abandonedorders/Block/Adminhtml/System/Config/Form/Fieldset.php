@@ -27,6 +27,8 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
     {
         $html = $this->_getHeaderHtml($element);
         
+        $html.=$this->_getJavascript();
+        
         $html .= $this->_getProcessNewPaymentFieldSelectHtml($element)->toHtml();
         
         $html.="<tr><td colspan='4'><br/><br/><div class='entry-edit-head'><a style='text-decoration:none;'>".Mage::helper('codeko_abandonedorders')->__('Per payment method configuration')."</a></div></td></tr>";
@@ -45,6 +47,37 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
         $html .= $this->_getFooterHtml($element);
         
         return $html;
+    }
+    
+    protected function _getJavascript(){
+        return <<< EOT
+            <style>
+                .codeko_hide{
+                    display:none !important;
+                }
+            </style>
+            <script type="text/javascript">
+            //<![CDATA[
+                document.observe('dom:loaded', function(event) {
+                    
+                    var \$hideshowpayment = $$('#codeko_toggle_payment');
+
+                    \$hideshowpayment.invoke('observe', 'click', function(event) {
+                        Event.stop(event);
+                        var \$codekopminactive = $$('.codeko_payment_inactive');
+
+                        $$('.codeko_hide_payment').each(Element.toggle);
+                        $$('.codeko_show_payment').each(Element.toggle);
+
+                        \$codekopminactive.each(function(item, index) {
+                            Element.up(Element.up(item)).toggleClassName("codeko_hide");
+                        });
+                    });
+                    $$('.codeko_hide_payment').invoke('click');
+                });
+            //]]>
+            </script>
+EOT;
     }
 
     /**
@@ -100,12 +133,12 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
                     'value' => $helper::PAYMENT_VALUE_NO_PROCESS
                 ),
                 array(
-                    'label' => Mage::helper('codeko_abandonedorders')->__('Custom minutes with this payment method'),
-                    'value' => $helper::PAYMENT_VALUE_CUSTOM_CONFIG
+                    'label' => Mage::helper('codeko_abandonedorders')->__('Auto cancel'),
+                    'value' => $helper::PAYMENT_VALUE_BASIC_CONFIG
                 ),
                 array(
-                    'label' => Mage::helper('codeko_abandonedorders')->__('Use default minutes'),
-                    'value' => $helper::PAYMENT_VALUE_BASIC_CONFIG
+                    'label' => Mage::helper('codeko_abandonedorders')->__('Auto cancel after custom minutes'),
+                    'value' => $helper::PAYMENT_VALUE_CUSTOM_CONFIG
                 )
             );
         }
@@ -146,11 +179,11 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
             
             $this->_values_new_payment = array(
                 array(
-                    'label' => Mage::helper('codeko_abandonedorders')->__('Ignore'),
+                    'label' => Mage::helper('codeko_abandonedorders')->__('Ignore until I configure it'),
                     'value' => $helper::PNP_VALUE_NO_PROCCES
                 ),
                 array(
-                    'label' => Mage::helper('codeko_abandonedorders')->__('Use default configuration'),
+                    'label' => Mage::helper('codeko_abandonedorders')->__('Auto cancel orders'),
                     'value' => $helper::PNP_VALUE_DEFAULT_CONFIG
                 )
             );
@@ -186,8 +219,9 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
         $array_field = array(
             'name' => 'groups[payments][fields][process_new_payment][value]', // this is groups[group name][fields][field name][value]
             'label' => Mage::helper('codeko_abandonedorders')->__("Default action"),
-            'value' => $data, // this is the current value
-            'values' => $values, // this is necessary if the type is select or multiselect
+            'comment' => Mage::helper('codeko_abandonedorders')->__("What should be done with not configured payments methods?"),
+            'value' => $data, 
+            'values' => $values, 
             'inherit' => $inherit,
             'can_use_default_value' => $this->getForm()->canUseDefaultValue($e), // sets if it can be changed on the default level
             'can_use_website_value' => $this->getForm()->canUseWebsiteValue($e)
@@ -231,8 +265,6 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
             'value' => $data, // this is the current value
             'values' => $values, // this is necessary if the type is select or multiselect
             'inherit' => $inherit,
-            //"comment" => Mage::helper('codeko_abandonedorders')->__("Enable Abandonedorder system of payment method") . " " . Mage::helper('payment')->getMethodInstance($group->getId())
-            //    ->getTitle(),
             'can_use_default_value' => $this->getForm()->canUseDefaultValue($e), // sets if it can be changed on the default level
             'can_use_website_value' => $this->getForm()->canUseWebsiteValue($e)
         ); // sets if can be changed on website level
@@ -281,7 +313,6 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
             'values' => $values,
             'inherit' => $inherit,
             'hint'=>'prueba',
-            'depends'=>new Mage_Core_Model_Config_Element('<depends><process_new_payment>1</process_new_payment></depends>'),
             'class' => "validate-digits validate-digits-range digits-range-0-6000",
             'comment' => Mage::helper('codeko_abandonedorders')->__("Minutes after an order with this payment method is considered abandoned and canceled"),
             'after_element_html' => '<script type="text/javascript"> new FormElementDependenceController({"'.$group->getId().$config.'":{"'.$group->getId().'_enabled":"2"}}); </script></form>',

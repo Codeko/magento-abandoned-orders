@@ -23,7 +23,7 @@
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <sort_order>10</sort_order>
-                            <comment>Enable Abandoned Orders module</comment>
+                            <comment>Enable automatic cancellation of abandoned orders</comment>
                             <show_in_default>1</show_in_default>
                         </enabled>
                         <minutes translate="label">
@@ -46,9 +46,10 @@
                     <show_in_store>1</show_in_store>
                     <fields>
                         <abandoned_order_states translate="label">
-                            <label>Order States to be cancel</label>
+                            <label>Order states to be canceled</label>
                             <frontend_type>multiselect</frontend_type>
                             <source_model>codeko_abandonedorders/adminhtml_system_config_source_states</source_model>
+                            <comment>Which states can be auto canceled?</comment>
                             <sort_order>10</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -58,6 +59,7 @@
                             <label>Cancel status</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_order_status</source_model>
+                            <comment>Which status should be assigned to auto canceled orders?</comment>
                             <sort_order>20</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -67,7 +69,7 @@
                 </status_settings>
 
                 <payments translate="label" module="codeko_abandonedorders">
-                    <label>Custom settings by payment methods</label>
+                    <label>Payment method's custom settings</label>
                     <frontend_type>text</frontend_type>
                     <frontend_model>codeko_abandonedorders/adminhtml_system_config_form_fieldset</frontend_model>
                     <sort_order>30</sort_order>
