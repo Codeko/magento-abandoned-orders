@@ -52,6 +52,9 @@
             <basic_settings>
                 <cron_expr>*/5 * * * *</cron_expr>
             </basic_settings>
+            <payments>
+                <process_new_payment>1</process_new_payment>
+            </payments>
         </codeko_abandonedorders>
     </default>
     <adminhtml>
