@@ -1,0 +1,30 @@
+# Requested paths to exclude from ignore:
+#
+# app/code/community/Codeko
+# app/etc/modules/Codeko_Abandonedorders.xml
+# app/locale/en_US/Codeko_Abandonedorders.csv
+# app/locale/es_ES/Codeko_Abandonedorders.csv
+
+/*
+!/app
+/app/*
+!/app/code
+/app/code/*
+!/app/code/community
+/app/code/community/*
+!/app/code/community/Codeko
+!/app/etc
+/app/etc/*
+!/app/etc/modules
+/app/etc/modules/*
+!/app/etc/modules/Codeko_Abandonedorders.xml
+!/app/locale
+/app/locale/*
+!/app/locale/en_US
+/app/locale/en_US/*
+!/app/locale/en_US/Codeko_Abandonedorders.csv
+!/app/locale/es_ES
+/app/locale/es_ES/*
+!/app/locale/es_ES/Codeko_Abandonedorders.csv
+!.gitignore
+
