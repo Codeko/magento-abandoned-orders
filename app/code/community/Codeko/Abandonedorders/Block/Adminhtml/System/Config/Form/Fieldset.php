@@ -26,8 +26,13 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
     public function render(Varien_Data_Form_Element_Abstract $element)
     {
         $html = $this->_getHeaderHtml($element);
-        // here you cand loop through all the fields you want to add
-        // for each element you neet to call $this->_getFieldHtml($element, $group);
+        
+        $html .= $this->_getProcessNewPaymentFieldSelectHtml($element)->toHtml();
+        
+        $html.="<tr><td colspan='4'><br/><br/><div class='entry-edit-head'><a style='text-decoration:none;'>".Mage::helper('codeko_abandonedorders')->__('Per payment method configuration')."</a></div></td></tr>";
+        
+        $html .= "<tr><td class='label'><p><a href='#' id='codeko_toggle_payment'><span class='codeko_hide_payment'>" . Mage::helper('codeko_abandonedorders')->__('Hide inactive payment methods') . "</span><span class='codeko_show_payment' style='display: none;'>" . Mage::helper('codeko_abandonedorders')->__('Show inactive payment methods') . "</span></a></p></tr></td>";
+        
         $groups = Mage::getModel('payment/config')->getAllMethods();
         
         foreach ($groups as $group) {
@@ -36,10 +41,6 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
             $html .= $fieldselect->toHtml();
             $html .= $fieldtext->toHtml();
         }
-        
-        $html .= $this->_getProcessNewPaymentFieldSelectHtml($element)->toHtml();
-        
-        $html .= "<a href='#' id='codeko_toggle_payment'><span class='codeko_hide_payment'>" . Mage::helper('codeko_abandonedorders')->__('Hide inactive payment methods') . "</span><span class='codeko_show_payment' style='display: none;'>" . Mage::helper('codeko_abandonedorders')->__('Show inactive payment methods') . "</span></a>";
         
         $html .= $this->_getFooterHtml($element);
         
@@ -145,7 +146,7 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
             
             $this->_values_new_payment = array(
                 array(
-                    'label' => Mage::helper('codeko_abandonedorders')->__('No process'),
+                    'label' => Mage::helper('codeko_abandonedorders')->__('Ignore'),
                     'value' => $helper::PNP_VALUE_NO_PROCCES
                 ),
                 array(
@@ -184,7 +185,7 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
         
         $array_field = array(
             'name' => 'groups[payments][fields][process_new_payment][value]', // this is groups[group name][fields][field name][value]
-            'label' => Mage::helper('codeko_abandonedorders')->__("Process new payment"),
+            'label' => Mage::helper('codeko_abandonedorders')->__("Default action"),
             'value' => $data, // this is the current value
             'values' => $values, // this is necessary if the type is select or multiselect
             'inherit' => $inherit,
@@ -230,8 +231,8 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
             'value' => $data, // this is the current value
             'values' => $values, // this is necessary if the type is select or multiselect
             'inherit' => $inherit,
-            "comment" => Mage::helper('codeko_abandonedorders')->__("Enable Abandonedorder system of payment method") . " " . Mage::helper('payment')->getMethodInstance($group->getId())
-                ->getTitle(),
+            //"comment" => Mage::helper('codeko_abandonedorders')->__("Enable Abandonedorder system of payment method") . " " . Mage::helper('payment')->getMethodInstance($group->getId())
+            //    ->getTitle(),
             'can_use_default_value' => $this->getForm()->canUseDefaultValue($e), // sets if it can be changed on the default level
             'can_use_website_value' => $this->getForm()->canUseWebsiteValue($e)
         ); // sets if can be changed on website level
@@ -276,15 +277,17 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
         
         $array_field = array(
             'name' => 'groups[payments][fields][group_' . $group->getId() . $config . '][value]', // this is groups[group name][fields][field name][value]
-            'value' => $data, // this is the current value
-            'values' => $values, // this is necessary if the type is select or multiselect
+            'value' => $data, 
+            'values' => $values,
             'inherit' => $inherit,
+            'hint'=>'prueba',
+            'depends'=>new Mage_Core_Model_Config_Element('<depends><process_new_payment>1</process_new_payment></depends>'),
             'class' => "validate-digits validate-digits-range digits-range-0-6000",
-            'comment' => Mage::helper('codeko_abandonedorders')->__("Minutes after an order is considered abandoned and canceled"),
-            'before_element_html' => "<div>hola mundo</div>",
+            'comment' => Mage::helper('codeko_abandonedorders')->__("Minutes after an order with this payment method is considered abandoned and canceled"),
+            'after_element_html' => '<script type="text/javascript"> new FormElementDependenceController({"'.$group->getId().$config.'":{"'.$group->getId().'_enabled":"2"}}); </script></form>',
             'can_use_default_value' => $this->getForm()->canUseDefaultValue($e), // sets if it can be changed on the default level
             'can_use_website_value' => $this->getForm()->canUseWebsiteValue($e)
-        ); // sets if can be changed on website level
+        );
         
         $class = "";
         if (!$this->_isPaymentMethodActive($group->getId())) {
