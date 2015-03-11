@@ -6,7 +6,6 @@
             <codePool>community</codePool>
             <depends>
                 <Mage_Sales />
-                <Codeko_All />
             </depends>
         </Codeko_Abandonedorders>
     </modules>
