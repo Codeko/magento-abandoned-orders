@@ -32,6 +32,13 @@
                 </observers>
             </admin_system_config_changed_section_codeko_abandonedorders>
         </events>
+        <resources>
+            <codeko_abandonedorders_setup>
+                <setup>
+                    <module>Codeko_Abandonedorders</module>
+                </setup>
+            </codeko_abandonedorders_setup>
+        </resources>
     </global>
     <fronted>
         <translate>
@@ -47,7 +54,8 @@
     <default>
         <codeko_abandonedorders>
             <status_settings>
-                <new_order_status>auto_canceled</new_order_status>
+                <new_order_status>codeko_auto_canceled</new_order_status>
+                <abandoned_order_states>new,pending_payment</abandoned_order_states>
             </status_settings>
             <basic_settings>
                 <cron_expr>*/5 * * * *</cron_expr>
