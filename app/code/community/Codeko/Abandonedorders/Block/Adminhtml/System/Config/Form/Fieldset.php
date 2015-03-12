@@ -31,9 +31,7 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
         
         $html .= $this->_getProcessNewPaymentFieldSelectHtml($element)->toHtml();
         
-        $html.="<tr><td colspan='4'><br/><br/><div class='entry-edit-head'><a style='text-decoration:none;'>".Mage::helper('codeko_abandonedorders')->__('Per payment method configuration')."</a></div></td></tr>";
-        
-        $html .= "<tr><td class='label'><p><a href='#' id='codeko_toggle_payment'><span class='codeko_hide_payment'>" . Mage::helper('codeko_abandonedorders')->__('Hide inactive payment methods') . "</span><span class='codeko_show_payment' style='display: none;'>" . Mage::helper('codeko_abandonedorders')->__('Show inactive payment methods') . "</span></a></p></tr></td>";
+        $html.="<tr><td colspan='4'><br/><div class='entry-edit-head'><a style='text-decoration:none;'>".Mage::helper('codeko_abandonedorders')->__('Per payment method configuration')."</a><button href='#' id='codeko_toggle_payment' class='show-hide'><span class='codeko_hide_payment'>" . Mage::helper('codeko_abandonedorders')->__('Hide disabled methods') . "</span><span class='codeko_show_payment' style='display: none;'>" . Mage::helper('codeko_abandonedorders')->__('Show all methods') . "</span></button></div><br/></td></tr>";
         
         $groups = Mage::getModel('payment/config')->getAllMethods();
         
@@ -54,6 +52,9 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
             <style>
                 .codeko_hide{
                     display:none !important;
+                }
+                #codeko_toggle_payment{
+                    float:right;
                 }
             </style>
             <script type="text/javascript">

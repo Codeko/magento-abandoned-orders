@@ -20,7 +20,7 @@ class Codeko_Abandonedorders_Model_Adminhtml_System_Config_Source_States
         $options = array();
         $options[] = array(
             'value' => '',
-            'label' => "-- " . Mage::helper('codeko_abandonedorders')->__('Please Select') . " --"
+            'label' => "-- " . Mage::helper('codeko_abandonedorders')->__('Please select') . " --"
         );
         foreach ($states as $code => $label) {
             $options[] = array(

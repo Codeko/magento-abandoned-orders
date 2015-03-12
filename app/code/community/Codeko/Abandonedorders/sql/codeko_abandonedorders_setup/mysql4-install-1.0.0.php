@@ -16,7 +16,7 @@ try {
     ), array(
         array(
             'status' => 'codeko_auto_canceled',
-            'label' => 'Auto canceled for abandonment'
+            'label' => 'Abandoned'
         )
     ));
     $installer->getConnection()->insertArray($statusStateTable, array(
