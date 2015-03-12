@@ -7,7 +7,7 @@
  */
 class Codeko_Abandonedorders_Model_Observer
 {
-
+    
     /**
      * General function Cancel Abandoned Orders
      */
@@ -79,41 +79,81 @@ class Codeko_Abandonedorders_Model_Observer
         $order_collection->addFieldToSelect('status');
         $order_collection->addFieldToSelect('updated_at');
         $this->log($order_collection->getSelect()->__toString());
+        Mage::dispatchEvent('codeko_abandonedorders_filter_order_collection', 
+                    array('collection' => $order_collection));
         return $order_collection;
     }
 
     /**
      * Function canceled orders for a order_collection
      */
+    
+    /**
+     * Cancel a abandoned order
+     * @param array $order Order fields
+     * @return boolean
+     */
     protected function cancelOrder($order)
     {
-        try {
-            if (!empty($order)) {
-                $helper = Mage::helper("codeko_abandonedorders");
-                $final_status = $helper->getNewOrderStatus();
-                $order_model = Mage::getModel('sales/order');
-                $order_model->load($order['entity_id']);
-                $do_not_cancel = false;
-                
-                if (!$order_model->canCancel() && $order_model->getState() === Mage_Sales_Model_Order::STATE_CANCELED) {
-                    // It may be the case it is canceled in state but not in status
-                    $do_not_cancel = true;
-                }
-                
-                if (!$do_not_cancel) {
-                    $order_model->cancel();
-                }
-                
-                $order_model->setStatus($final_status);
-                
-                $order_model->addStatusHistoryComment($helper->__('Order auto canceled'), $final_status);
-                
-                $order_model->save();
-                $this->log("Order " . $order["entity_id"] . " - CANCELED");
+        if (!empty($order)) {
+            return false;
+        }
+        try {    
+            $order_id=$order['entity_id'];
+            $order_model = Mage::getModel('sales/order')->load($order_id);
+            //Set order attribute. The diferents methods and events will change it
+            //to finally determine if the order should be canceled or not
+            $order_model->setCodekoAbandonedOrdersDoCancel(true);
+
+            Mage::dispatchEvent('codeko_abandonedorders_cancel_order_before', 
+                array('order' => $order_model));
+
+            $this->_checkIsCancelable($order_model);
+
+            if ($order_model->isCodekoAbandonedOrdersDoCancel()) {
+                $order_model->cancel();
             }
+
+            Mage::dispatchEvent('codeko_abandonedorders_cancel_order_before_save', 
+                    array('order' => $order_model));
+            
+            $this->_changeOrderStatus($order_model);
+
+            $order_model->save();
+            $this->log("Order " . $order["entity_id"] . " - CANCELED");
+
+            Mage::dispatchEvent('codeko_abandonedorders_cancel_order_after', 
+                array('order' => $order_model));
+            return true;
         } catch (Exception $e) {
             $this->log("Error order cancelling: " . $e);
         }
+        return false;
+    }
+    
+    /**
+     * Check if a order should be canceled
+     * @param Mage_Sales_Model_Order $order_model
+     */
+    protected function _checkIsCancelable(Mage_Sales_Model_Order $order_model) {
+        if ($order_model->isCodekoAbandonedOrdersDoCancel() &&
+                (!$order_model->canCancel() || $order_model->getState() === Mage_Sales_Model_Order::STATE_CANCELED)) {
+            // It may be the case it is canceled in state but not in status
+            $order_model->setCodekoAbandonedOrdersDoCancel(false);
+        }
+        Mage::dispatchEvent('codeko_abandonedorders_check_order_is_cancelable', 
+                    array('order' => $order_model));
+    }
+
+    /**
+     * Change order status and add comments
+     * @param Mage_Sales_Model_Order $order_model
+     */
+    protected function _changeOrderStatus(Mage_Sales_Model_Order $order_model){
+        $helper = Mage::helper("codeko_abandonedorders");
+        $final_status = $helper->getNewOrderStatus();    
+        $order_model->setStatus($final_status);
+        $order_model->addStatusHistoryComment($helper->__('Abandoned order auto canceled'), $final_status);
     }
 
     /**
@@ -124,12 +164,36 @@ class Codeko_Abandonedorders_Model_Observer
      */
     protected function isCancelable($order)
     {
-        $helper = Mage::helper("codeko_abandonedorders");
+        
         $updated_at = $order["updated_at"];
-        $method = $order["method"];
-        $minutes = 0;
-        $payment_enabled = $helper->getPaymentEnabled($method);
+        $payment_method = $order["method"];
         $is_cancelable=false;
+        
+        $minutes= $this->_getPaymentMinutesConfig($payment_method);
+        
+        // Verify that the minutes are correct
+        if ($minutes > 0) {
+            $dateorder = strtotime($updated_at);
+            $datenow = time();
+            $diff=round(abs($datenow - $dateorder) / 60,2);
+            if ($diff>=$minutes) {
+                $this->log("Order " . $order["entity_id"] . " Date: $updated_at will be cancelled after $diff minutes ($minutes configured)");
+                $is_cancelable=true;
+            }
+        }
+        
+        return $is_cancelable;
+    }
+    
+    /**
+     * Returns the configured minutes for a payment method
+     * @param string $payment_method
+     * @return int minutes configured for this payment method
+     */
+    protected function _getPaymentMinutesConfig($payment_method){
+        $helper = Mage::helper("codeko_abandonedorders");
+        $minutes = 0;
+        $payment_enabled = $helper->getPaymentEnabled($payment_method);
         
         // Getting minutes
         if (empty($payment_enabled) || $payment_enabled == $helper::PAYMENT_VALUE_EMPTY) {
@@ -141,21 +205,10 @@ class Codeko_Abandonedorders_Model_Observer
         } else {
             // If the payment method is setup
             if ($payment_enabled != $helper::PAYMENT_VALUE_NO_PROCESS) {
-                $minutes = $this->getPaymentMinutes($method);
+                $minutes = $this->getPaymentMinutes($payment_method);
             }
         }
-        
-        // Verify that the minutes are correct
-        if ($minutes > 0) {
-            $dateorder = (int) date("YmdHis", strtotime($updated_at));
-            $datenow = (int) date("YmdHis");
-            if ($dateorder < $datenow) {
-                $this->log("Order " . $order["entity_id"] . " Date: " . $updated_at . " - Minutes for canceling " . $minutes . " TO BE CANCELED");
-                $is_cancelable=true;
-            }
-        }
-        
-        return $is_cancelable;
+        return $minutes;
     }
 
     /**
