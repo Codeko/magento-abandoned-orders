@@ -1,11 +1,12 @@
 <?php
 
 /**
- * This class add dynamically configuring Abandoned Orders for payment
+ * This class add configuration fields for each payment method 
  * @author Codeko
  * 
  */
-class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends Mage_Adminhtml_Block_System_Config_Form_Fieldset
+class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset 
+    extends Mage_Adminhtml_Block_System_Config_Form_Fieldset
 {
 
     protected $_dummyElement;
@@ -18,9 +19,12 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
 
     protected $_values_new_payment;
 
+  
     /**
-     * This render fileds payment
-     *
+     * Renders the diferents payment configuration fields
+     * @param Varien_Data_Form_Element_Fieldset $element
+     * @return string Html with the field content
+     * 
      * @see Mage_Adminhtml_Block_System_Config_Form_Fieldset::render()
      */
     public function render(Varien_Data_Form_Element_Abstract $element)
@@ -29,15 +33,20 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
         
         $html.=$this->_getJavascript();
         
-        $html .= $this->_getProcessNewPaymentFieldSelectHtml($element)->toHtml();
+        $html .= $this->_getDefaultPaymentConfigField($element)->toHtml();
         
-        $html.="<tr><td colspan='4'><br/><div class='entry-edit-head'><a style='text-decoration:none;'>".Mage::helper('codeko_abandonedorders')->__('Per payment method configuration')."</a><button href='#' id='codeko_toggle_payment' class='show-hide'><span class='codeko_hide_payment'>" . Mage::helper('codeko_abandonedorders')->__('Hide disabled methods') . "</span><span class='codeko_show_payment' style='display: none;'>" . Mage::helper('codeko_abandonedorders')->__('Show all methods') . "</span></button></div><br/></td></tr>";
+        $html.="<tr><td colspan='4'><br/><div class='entry-edit-head'>"
+                . "<a style='text-decoration:none;'>".Mage::helper('codeko_abandonedorders')->__('Per payment method configuration')."</a>"
+                . "<button href='#' id='codeko_toggle_payment' class='show-hide'>"
+                . "<span class='codeko_hide_payment'>" . Mage::helper('codeko_abandonedorders')->__('Hide disabled methods') . "</span>"
+                . "<span class='codeko_show_payment' style='display: none;'>" . Mage::helper('codeko_abandonedorders')->__('Show all methods') . "</span>"
+                . "</button></div><br/></td></tr>";
         
         $groups = Mage::getModel('payment/config')->getAllMethods();
         
         foreach ($groups as $group) {
-            $fieldselect = $this->_getFieldSelectHtml($element, $group);
-            $fieldtext = $this->_getFieldTextHtml($element, $group);
+            $fieldselect = $this->_getPaymentConfigField($element, $group);
+            $fieldtext = $this->_getPaymentMinutesField($element, $group);
             $html .= $fieldselect->toHtml();
             $html .= $fieldtext->toHtml();
         }
@@ -47,6 +56,10 @@ class Codeko_Abandonedorders_Block_Adminhtml_System_Config_Form_Fieldset extends
         return $html;
     }
     
+    /**
+     * javascript and styles for the config screen
+     * @return string 
+     */
     protected function _getJavascript(){
         return <<< EOT
             <style>
@@ -101,10 +114,7 @@ EOT;
     }
 
     /**
-     * This sets the fields renderer.
-     * If you have a custom renderer tou can change this.
-     *
-     * @return Ambigous <object, boolean>
+     * @return Mage_Adminhtml_Block_System_Config_Form_Field
      */
     protected function _getFieldRenderer()
     {
@@ -115,9 +125,8 @@ EOT;
     }
 
     /**
-     * This is usefull in case you need to create a config field with type
-     * dropdown or multiselect.
-     * For text and texareaa you can skip it.
+     * 
+     * @return array Diferentes options for per payment method settings
      */
     protected function _getValuesEnabled()
     {
@@ -156,24 +165,30 @@ EOT;
         }
         return $this->_active_pm;
     }
-
-    protected function _isPaymentMethodActive($id_payment)
+    
+    /**
+     * Check if a payment method is active by id
+     * @param string $payment_id
+     * @return boolean true if the payment is active, false if not
+     */
+    protected function _isPaymentMethodActive($payment_id)
     {
         $actives = $this->_getActivePaymentMethods();
+        $is_active=false;
         foreach ($actives as $active) {
-            if ($active->getId() == $id_payment) {
-                return true;
+            if ($active->getId() == $payment_id) {
+                $is_active = true;
+                break;
             }
         }
-        return false;
+        return $is_active;
     }
 
     /**
-     * This is usefull in case you need to create a config field with type
-     * dropdown or multiselect.
-     * For text and texareaa you can skip it.
+     * 
+     * @return array
      */
-    protected function _getValuesProcessNewPayment()
+    protected function _getDefaultValuesForPayment()
     {
         if (empty($this->_values_new_payment)) {
             $helper = Mage::helper("codeko_abandonedorders");
@@ -193,29 +208,28 @@ EOT;
     }
 
     /**
-     * This actually gets the html for a Process new payment
-     *
-     * @param unknown $fieldset            
-     * @param unknown $group            
+     * 
+     * @param Varien_Data_Form_Element_Fieldset $fieldset
+     * @return Varien_Data_Form_Element_Select
      */
-    protected function _getProcessNewPaymentFieldSelectHtml($fieldset)
+    protected function _getDefaultPaymentConfigField(Varien_Data_Form_Element_Fieldset $fieldset)
     {
         $field_type = "select";
-        $values = $this->_getValuesProcessNewPayment();
+        $values = $this->_getDefaultValuesForPayment();
         
         $configData = $this->getConfigData();
-        $path = 'codeko_abandonedorders/payments/process_new_payment'; // this value is composed by the section name, group name and field name. The field name must not be numerical (that's why I added 'group_' in front of it)
+
+        $path = 'codeko_abandonedorders/payments/process_new_payment'; 
+        
         if (isset($configData[$path])) {
             $data = $configData[$path];
             $inherit = false;
         } else {
-            $data = (int) (string) $this->getForm()
-                ->getConfigRoot()
-                ->descend($path);
+            $data = (int) (string) $this->getForm()->getConfigRoot()->descend($path);
             $inherit = true;
         }
         
-        $e = $this->_getDummyElement(); // get the dummy element
+        $e = $this->_getDummyElement(); 
         
         $array_field = array(
             'name' => 'groups[payments][fields][process_new_payment][value]', // this is groups[group name][fields][field name][value]
@@ -224,127 +238,125 @@ EOT;
             'value' => $data, 
             'values' => $values, 
             'inherit' => $inherit,
-            'can_use_default_value' => $this->getForm()->canUseDefaultValue($e), // sets if it can be changed on the default level
+            // sets if it can be changed on the default level
+            'can_use_default_value' => $this->getForm()->canUseDefaultValue($e), 
+            // sets if can be changed on website level
             'can_use_website_value' => $this->getForm()->canUseWebsiteValue($e)
-        ); // sets if can be changed on website level
+        ); 
         
-        $field = $fieldset->addField("process_new_payment", $field_type, $array_field)->setRenderer($this->_getFieldRenderer());
+        $field = $fieldset->addField("process_new_payment", $field_type, $array_field)
+                ->setRenderer($this->_getFieldRenderer());
         
         return $field;
     }
 
     /**
-     * This actually gets the html for a field
-     *
-     * @param unknown $fieldset            
-     * @param unknown $group            
+     * Return the select config field for a payment method
+     * @param Varien_Data_Form_Element_Fieldset $fieldset
+     * @param Mage_Payment_Model_Method_Abstract $payment_method
+     * @return Varien_Data_Form_Element_Abstract
      */
-    protected function _getFieldSelectHtml($fieldset, $group)
+    protected function _getPaymentConfigField(Varien_Data_Form_Element_Fieldset $fieldset, Mage_Payment_Model_Method_Abstract $payment_method)
     {
-        $config = "_enabled";
+        $name = "_enabled";
         $field_type = "select";
+        $label=Mage::helper('payment')->getMethodInstance($payment_method->getId())->getTitle();
         $values = $this->_getValuesEnabled();
+        return $this->_getField($fieldset, $payment_method, $name, $field_type, $label, $values);
+    }
+
+    /**
+     * Return the custom minutes config field for a payment method
+     * @param Varien_Data_Form_Element_Fieldset $fieldset
+     * @param Mage_Payment_Model_Method_Abstract $payment_method
+     * @return Varien_Data_Form_Element_Abstract
+     */
+    protected function _getPaymentMinutesField(Varien_Data_Form_Element_Fieldset $fieldset, Mage_Payment_Model_Method_Abstract $payment_method)
+    {
+        $name = "_minutes";
+        $field_type = "text";
+        $values = "";
+        $label="";
+        $after_html='<script type="text/javascript"> '
+                . 'new FormElementDependenceController({"'.$payment_method->getId().$name.'":{"'.$payment_method->getId().'_enabled":"2"}}); '
+                . '</script>';
+        $comment=Mage::helper('codeko_abandonedorders')
+                ->__("Minutes after an order with this payment method is considered abandoned and canceled");
         
-        $configData = $this->getConfigData();
-        $path = 'codeko_abandonedorders/payments/group_' . $group->getId() . $config; // this value is composed by the section name, group name and field name. The field name must not be numerical (that's why I added 'group_' in front of it)
-        if (isset($configData[$path])) {
-            $data = $configData[$path];
-            $inherit = false;
-        } else {
-            $data = (int) (string) $this->getForm()
-                ->getConfigRoot()
-                ->descend($path);
-            $inherit = true;
-        }
+        $extra_data = array(   
+            'class' => "validate-digits validate-digits-range digits-range-0-6000",
+            'comment' => $comment,
+            'after_element_html' => $after_html,
+        );
         
-        $e = $this->_getDummyElement(); // get the dummy element
+        return $this->_getField($fieldset, $payment_method, $name, $field_type, $label, $values,$extra_data);
+    }
+    
+    /**
+     * Generate a configuration field
+     * @param Varien_Data_Form_Element_Fieldset $fieldset
+     * @param Mage_Payment_Model_Method_Abstract $payment_method
+     * @param string $name
+     * @param string $field_type
+     * @param string $label
+     * @param array $values
+     * @param array $extra_config
+     * @return Varien_Data_Form_Element_Abstract
+     */
+    protected function _getField(Varien_Data_Form_Element_Fieldset $fieldset, Mage_Payment_Model_Method_Abstract $payment_method, $name, $field_type, $label, $values, $extra_config=array()){
         
-        $array_field = array(
-            'name' => 'groups[payments][fields][group_' . $group->getId() . $config . '][value]', // this is groups[group name][fields][field name][value]
-            'label' => Mage::helper('payment')->getMethodInstance($group->getId())
-                ->getTitle(), // this is the label of the element
-            'value' => $data, // this is the current value
-            'values' => $values, // this is necessary if the type is select or multiselect
-            'inherit' => $inherit,
-            'can_use_default_value' => $this->getForm()->canUseDefaultValue($e), // sets if it can be changed on the default level
-            'can_use_website_value' => $this->getForm()->canUseWebsiteValue($e)
-        ); // sets if can be changed on website level
+        $array_field= $this->_getFieldConfigData($payment_method, $name, $values, $label, $extra_config);
         
         $class = "codeko_select_payment";
-        if (!$this->_isPaymentMethodActive($group->getId())) {
+        if (!$this->_isPaymentMethodActive($payment_method->getId())) {
             $class .= " codeko_payment_inactive";
         }
         
-        $field = $fieldset->addField($group->getId() . $config, $field_type, $array_field)
+        $field = $fieldset->addField($payment_method->getId() . $name, $field_type, $array_field)
             ->setRenderer($this->_getFieldRenderer())
             ->addClass($class);
         
         return $field;
     }
-
+    
     /**
-     * This actually gets the html for a field
-     *
-     * @param unknown $fieldset            
-     * @param unknown $group            
+     * Generate field configuration array
+     * @param Mage_Payment_Model_Method_Abstract $payment_method
+     * @param string $name
+     * @param array $values
+     * @param string $label
+     * @param array $extra_config
+     * @return array Array with the config data of the field
      */
-    protected function _getFieldTextHtml($fieldset, $group)
-    {
-        $config = "_minutes";
-        $field_type = "text";
-        $values = "";
+    protected function _getFieldConfigData(Mage_Payment_Model_Method_Abstract $payment_method,
+            $name,$values,$label,$extra_config=array()){
         
         $configData = $this->getConfigData();
-        $path = 'codeko_abandonedorders/payments/group_' . $group->getId() . $config; // this value is composed by the section name, group name and field name. The field name must not be numerical (that's why I added 'group_' in front of it)
+        // this value is composed by the section name, group name and field name. 
+        // The field name must not be numerical (that's why I added 'group_' in front of it)
+        $path = 'codeko_abandonedorders/payments/group_' . $payment_method->getId() . $name; 
         if (isset($configData[$path])) {
             $data = $configData[$path];
             $inherit = false;
         } else {
-            $data = (int) (string) $this->getForm()
-                ->getConfigRoot()
-                ->descend($path);
+            $data = (int) (string) $this->getForm()->getConfigRoot()->descend($path);
             $inherit = true;
         }
-        
-        $e = $this->_getDummyElement(); // get the dummy element
-        
+        if($data==0){
+            $data="";
+        }
+        $e = $this->_getDummyElement();
         $array_field = array(
-            'name' => 'groups[payments][fields][group_' . $group->getId() . $config . '][value]', // this is groups[group name][fields][field name][value]
+            // this is groups[group name][fields][field name][value]
+            'name' => 'groups[payments][fields][group_' . $payment_method->getId() . $name . '][value]',
+            'label' => $label,
             'value' => $data, 
             'values' => $values,
             'inherit' => $inherit,
-            'hint'=>'prueba',
-            'class' => "validate-digits validate-digits-range digits-range-0-6000",
-            'comment' => Mage::helper('codeko_abandonedorders')->__("Minutes after an order with this payment method is considered abandoned and canceled"),
-            'after_element_html' => '<script type="text/javascript"> new FormElementDependenceController({"'.$group->getId().$config.'":{"'.$group->getId().'_enabled":"2"}}); </script></form>',
-            'can_use_default_value' => $this->getForm()->canUseDefaultValue($e), // sets if it can be changed on the default level
+            'can_use_default_value' => $this->getForm()->canUseDefaultValue($e), 
             'can_use_website_value' => $this->getForm()->canUseWebsiteValue($e)
         );
         
-        $class = "";
-        if (!$this->_isPaymentMethodActive($group->getId())) {
-            $class .= " codeko_payment_inactive";
-        }
-        
-        $field = $fieldset->addField($group->getId() . $config, $field_type, $array_field)
-            ->setRenderer($this->_getFieldRenderer())
-            ->addClass($class);
-        
-        return $field;
+        return array_merge($array_field,$extra_config);
     }
-
-/**
- * Add Dependences
- *
- * @param unknown $fieldselect            
- * @param unknown $fieldtext            
- */
-    // private function addDependences($fieldselect, $fieldtext)
-    // {
-    // $this->getForm()->setChild('form_after', $this->getForm()->getLayout()
-    // ->createBlock('adminhtml/widget_form_element_dependence')
-    // ->addFieldMap($fieldselect->getHtmlId(), $fieldselect->getName())
-    // ->addFieldMap($fieldtext->getHtmlId(), $fieldtext->getName())
-    // ->addFieldDependence($fieldtext->getName(), $fieldselect->getName(), 1));
-    // }
 }

@@ -29,6 +29,8 @@ class Codeko_Abandonedorders_Helper_Data extends Mage_Core_Helper_Abstract
     const PAYMENT_VALUE_CUSTOM_CONFIG = 2;
 
     const PAYMENT_VALUE_BASIC_CONFIG = 3;
+    
+    const DEFAULT_CRON_INTERVAL = 5;
 
     const CRON_STRING_PATH = "codeko_abandonedorders/basic_settings/cron_expr";
 
@@ -115,29 +117,29 @@ class Codeko_Abandonedorders_Helper_Data extends Mage_Core_Helper_Abstract
      */
     public static function mcd($a, $b)
     {
-        $x = 0;
         $nuevob = 0;
         $x = $a;
-        
+        $result = $a;
         if ($a < $b) {
             $a = $b;
             $b = $x;
-            return self::mcd($a, $b);
+            $result= self::mcd($a, $b);
         } else if ($b != 0) {
             $nuevob = $a % $b;
             $a = $b;
             $b = $nuevob;
-            return self::mcd($a, $b);
+            $result= self::mcd($a, $b);
         }
-        return $a;
+        return $result;
     }
-
+    
     /**
-     * Get cron interval
-     *
-     * @return integer
+     * Get all the posible minutes values configured for payment methods and 
+     * general configuration
+     * 
+     * @return array
      */
-    public static function getCronInterval()
+    private function _getPaymentsConfiguredMinutes()
     {
         // Getting a configuration payment minutes
         $minutes = array();
@@ -145,18 +147,31 @@ class Codeko_Abandonedorders_Helper_Data extends Mage_Core_Helper_Abstract
         
         foreach ($payments as $pay) {
             $enabled = self::getPaymentEnabled($pay->getId());
-            if ($enabled) {
-                $aux = self::getPaymentMinutes($pay->getId());
-                if (is_numeric($aux) && $aux > 0)
+            $aux = self::getPaymentMinutes($pay->getId());
+            if ($enabled && is_numeric($aux) && $aux > 0) {
                     $minutes[] = $aux;
             }
         }
         
         $default = self::getDefaultMinutes();
-        if (is_numeric($default) && $default > 0)
+        if (is_numeric($default) && $default > 0){
             $minutes[] = $default;
-            
-            // Getting mcd
+        }
+        
+        return $minutes;
+    }
+    
+    /**
+     * Get cron interval. Calculate the best cron interval for the configured minutes
+     *
+     * @return integer The cron intervar in minutes to be used 
+     */
+    public function getCronInterval()
+    {
+        // Getting a configuration payment minutes
+        $minutes = $this->_getPaymentsConfiguredMinutes();
+        
+        // Getting mcd
         $mcd = 0;
         for ($i = 0; $i < count($minutes); $i++) {
             if ($i == 0) {

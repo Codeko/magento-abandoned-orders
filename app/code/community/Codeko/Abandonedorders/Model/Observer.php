@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Makes operations cancellation of orders
+ * Cancel orders after a configured amount of minutes
  * @author Codeko
  *
  */
@@ -13,13 +13,13 @@ class Codeko_Abandonedorders_Model_Observer
      */
     public function cancelAbandonedOrders()
     {
-        $this->log("#################### Executing abandonedOrders ... ####################");
+        $this->log("#################### Executing Abandoned Orders ... ####################");
         
         $helper = Mage::helper("codeko_abandonedorders");
         
         $enabled = $helper->isEnabled();
+        
         if ($enabled) {
-            
             // Getting specific order
             $abandoned_states = $helper->getAbandonedStates();
             $order_collection = $this->getOrderCollection($abandoned_states);
@@ -30,15 +30,15 @@ class Codeko_Abandonedorders_Model_Observer
             }
         }
         
-        $this->log("#################### Finalized abandonedOrders ####################");
+        $this->log("#################### Finalized Abandoned Orders ####################");
     }
 
     /**
-     * Iterator orders
+     * Iterate the order collection and cancel each order
      *
-     * @param unknown $order_collection            
+     * @param Mage_Sales_Model_Resource_Order_Collection $order_collection            
      */
-    private function iteratorOrders($order_collection)
+    protected function iteratorOrders($order_collection)
     {
         foreach ($order_collection->getItems() as $order) {
             if (!empty($order) && $this->isCancelable($order)) {
@@ -49,12 +49,12 @@ class Codeko_Abandonedorders_Model_Observer
     }
 
     /**
-     * This provides us Collection of orders given selected states
+     * This provides us Collection of orders for the given selected states
      *
      * @param array $abandoned_states            
-     * @return Collection order colletion
+     * @return Mage_Sales_Model_Resource_Order_Collection order colletion
      */
-    private function getOrderCollection($abandoned_states)
+    protected function getOrderCollection($abandoned_states)
     {
         if (empty($abandoned_states)) {
             return null;
@@ -63,12 +63,12 @@ class Codeko_Abandonedorders_Model_Observer
         $this->log("Getting order collecion");
         $order_collection = Mage::getResourceModel('sales/order_collection');
         // Make JOIN with the table order_payment to add a payment method to collection
-        $order_collection->getSelect()->join(array(
-            'p' => $order_collection->getResource()
-                ->getTable('sales/order_payment')
-        ), 'p.parent_id = main_table.entity_id', array(
-            "method"
-        ));
+        $payments_table=$order_collection->getResource()->getTable('sales/order_payment');
+        $order_collection->getSelect()->join(
+            array('p' => $payments_table), 
+            'p.parent_id = main_table.entity_id', 
+            array("method")
+        );
         $order_collection->addFieldToFilter('state', array(
             'in' => array(
                 explode(",", $abandoned_states)
@@ -78,15 +78,14 @@ class Codeko_Abandonedorders_Model_Observer
         $order_collection->addFieldToSelect('state');
         $order_collection->addFieldToSelect('status');
         $order_collection->addFieldToSelect('updated_at');
-        $this->log($order_collection->getSelect()
-            ->__toString());
+        $this->log($order_collection->getSelect()->__toString());
         return $order_collection;
     }
 
     /**
      * Function canceled orders for a order_collection
      */
-    private function cancelOrder($order)
+    protected function cancelOrder($order)
     {
         try {
             if (!empty($order)) {
@@ -118,21 +117,22 @@ class Codeko_Abandonedorders_Model_Observer
     }
 
     /**
-     * Function that indicates if an order meets the conditions to be canceled
-     *
-     * @param
-     *            booelan
+     * Check if an order meets the conditions to be canceled
+     * 
+     * @param Mage_Sales_Model_Order $order
+     * @return boolean True if the order can be cancel, false if not
      */
-    private function isCancelable($order)
+    protected function isCancelable($order)
     {
         $helper = Mage::helper("codeko_abandonedorders");
         $updated_at = $order["updated_at"];
         $method = $order["method"];
         $minutes = 0;
         $payment_enabled = $helper->getPaymentEnabled($method);
+        $is_cancelable=false;
         
         // Getting minutes
-        if ($payment_enabled == null || $payment_enabled == "" || $payment_enabled == $helper::PAYMENT_VALUE_EMPTY) {
+        if (empty($payment_enabled) || $payment_enabled == $helper::PAYMENT_VALUE_EMPTY) {
             // If the method of payment has no settings (possibly new payment method)
             $process_new_payment = $helper->getProcessNewPaymentMethod();
             if ($process_new_payment == $helper::PNP_VALUE_DEFAULT_CONFIG) {
@@ -151,20 +151,17 @@ class Codeko_Abandonedorders_Model_Observer
             $datenow = (int) date("YmdHis");
             if ($dateorder < $datenow) {
                 $this->log("Order " . $order["entity_id"] . " Date: " . $updated_at . " - Minutes for canceling " . $minutes . " TO BE CANCELED");
-                return true;
+                $is_cancelable=true;
             }
-        } else {
-            return false;
         }
         
-        return false;
+        return $is_cancelable;
     }
 
     /**
-     * Getting payment method minutes
+     * Get payment method minutes
      *
-     * @param
-     *            Method payment
+     * @param string Payment method code
      * @return integer minutes
      */
     private function getPaymentMinutes($method_payment)
@@ -205,7 +202,7 @@ class Codeko_Abandonedorders_Model_Observer
         $helper = Mage::helper("codeko_abandonedorders");
         $mcm = $helper->getCronInterval();
         if (!is_numeric($mcm) || $mcm <= 0) {
-            $mcm = 5;
+            $mcm = $helper::DEFAULT_CRON_INTERVAL;
         }
         $cronExprString = "*/" . $mcm . " * * * *";
         try {
@@ -215,7 +212,7 @@ class Codeko_Abandonedorders_Model_Observer
                 ->save();
             $this->log("Config cron " . $cronExprString);
         } catch (Exception $e) {
-            throw new Exception(Mage::helper('cron')->__('Unable to save the cron expression.'));
+            throw new Exception(Mage::helper('cron')->__('Unable to save the cron expression.'),$e->getCode(),$e);
         }
     }
 }

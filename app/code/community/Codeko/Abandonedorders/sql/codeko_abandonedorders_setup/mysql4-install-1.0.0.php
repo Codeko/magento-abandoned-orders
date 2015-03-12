@@ -9,7 +9,8 @@ $statusTable = $installer->getTable('sales/order_status');
 $statusStateTable = $installer->getTable('sales/order_status_state');
 
 try {
-    // When installing abandonedorders, create auto canceled status and relationship
+    // When installing abandonedorders, create auto canceled status and 
+    // relationship with the canceled state
     $installer->getConnection()->insertArray($statusTable, array(
         'status',
         'label'
