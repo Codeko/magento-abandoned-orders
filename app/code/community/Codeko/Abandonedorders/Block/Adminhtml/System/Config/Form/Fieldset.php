@@ -216,35 +216,18 @@ EOT;
     {
         $field_type = "select";
         $values = $this->_getDefaultValuesForPayment();
+        $label = Mage::helper('codeko_abandonedorders')->__("Default action");
+        $comment = Mage::helper('codeko_abandonedorders')->__("What should be done with not configured payments methods?");
+        $field_name = 'groups[payments][fields][process_new_payment][value]';
         
-        $configData = $this->getConfigData();
-
         $path = 'codeko_abandonedorders/payments/process_new_payment'; 
+        $current_value=$this->_getCurrentValue($path);
         
-        if (isset($configData[$path])) {
-            $data = $configData[$path];
-            $inherit = false;
-        } else {
-            $data = (int) (string) $this->getForm()->getConfigRoot()->descend($path);
-            $inherit = true;
-        }
+        $extra_config = array('comment' => $comment); 
         
-        $e = $this->_getDummyElement(); 
+        $field_data = $this->_getFieldConfigData($field_name, $label, $values, $current_value, $extra_config);
         
-        $array_field = array(
-            'name' => 'groups[payments][fields][process_new_payment][value]', // this is groups[group name][fields][field name][value]
-            'label' => Mage::helper('codeko_abandonedorders')->__("Default action"),
-            'comment' => Mage::helper('codeko_abandonedorders')->__("What should be done with not configured payments methods?"),
-            'value' => $data, 
-            'values' => $values, 
-            'inherit' => $inherit,
-            // sets if it can be changed on the default level
-            'can_use_default_value' => $this->getForm()->canUseDefaultValue($e), 
-            // sets if can be changed on website level
-            'can_use_website_value' => $this->getForm()->canUseWebsiteValue($e)
-        ); 
-        
-        $field = $fieldset->addField("process_new_payment", $field_type, $array_field)
+        $field = $fieldset->addField("process_new_payment", $field_type, $field_data)
                 ->setRenderer($this->_getFieldRenderer());
         
         return $field;
@@ -262,7 +245,7 @@ EOT;
         $field_type = "select";
         $label=Mage::helper('payment')->getMethodInstance($payment_method->getId())->getTitle();
         $values = $this->_getValuesEnabled();
-        return $this->_getField($fieldset, $payment_method, $name, $field_type, $label, $values);
+        return $this->_getPaymentField($fieldset, $payment_method, $name, $field_type, $label, $values);
     }
 
     /**
@@ -289,7 +272,7 @@ EOT;
             'after_element_html' => $after_html,
         );
         
-        return $this->_getField($fieldset, $payment_method, $name, $field_type, $label, $values,$extra_data);
+        return $this->_getPaymentField($fieldset, $payment_method, $name, $field_type, $label, $values,$extra_data);
     }
     
     /**
@@ -303,9 +286,9 @@ EOT;
      * @param array $extra_config
      * @return Varien_Data_Form_Element_Abstract
      */
-    protected function _getField(Varien_Data_Form_Element_Fieldset $fieldset, Mage_Payment_Model_Method_Abstract $payment_method, $name, $field_type, $label, $values, $extra_config=array()){
+    protected function _getPaymentField(Varien_Data_Form_Element_Fieldset $fieldset, Mage_Payment_Model_Method_Abstract $payment_method, $name, $field_type, $label, $values, $extra_config=array()){
         
-        $array_field= $this->_getFieldConfigData($payment_method, $name, $values, $label, $extra_config);
+        $array_field= $this->_getPaymentFieldConfigData($payment_method, $name, $values, $label, $extra_config);
         
         $class = "codeko_select_payment";
         if (!$this->_isPaymentMethodActive($payment_method->getId())) {
@@ -328,13 +311,40 @@ EOT;
      * @param array $extra_config
      * @return array Array with the config data of the field
      */
-    protected function _getFieldConfigData(Mage_Payment_Model_Method_Abstract $payment_method,
+    protected function _getPaymentFieldConfigData(Mage_Payment_Model_Method_Abstract $payment_method,
             $name,$values,$label,$extra_config=array()){
         
-        $configData = $this->getConfigData();
         // this value is composed by the section name, group name and field name. 
         // The field name must not be numerical (that's why I added 'group_' in front of it)
         $path = 'codeko_abandonedorders/payments/group_' . $payment_method->getId() . $name; 
+        
+        $current_value=$this->_getCurrentValue($path);
+        
+        if($current_value["value"]==0){
+            $current_value["value"]="";
+        }
+        
+        $field_name='groups[payments][fields][group_' . $payment_method->getId() . $name . '][value]';
+        
+        return $this->_getFieldConfigData($field_name, $label, $values, $current_value, $extra_config);
+    }
+    
+    protected function _getFieldConfigData($field_name,$label,$values,$current_value,$extra_config=array()){
+        $dummy = $this->_getDummyElement();
+        $array_field = array(
+            // this is groups[group name][fields][field name][value]
+            'name' => $field_name,
+            'label' => $label,
+            'values' => $values,
+            'can_use_default_value' => $this->getForm()->canUseDefaultValue($dummy), 
+            'can_use_website_value' => $this->getForm()->canUseWebsiteValue($dummy)
+        );
+        return array_merge($array_field,$current_value,$extra_config);
+    }
+
+
+    protected function _getCurrentValue($path){
+        $configData = $this->getConfigData();
         if (isset($configData[$path])) {
             $data = $configData[$path];
             $inherit = false;
@@ -342,21 +352,6 @@ EOT;
             $data = (int) (string) $this->getForm()->getConfigRoot()->descend($path);
             $inherit = true;
         }
-        if($data==0){
-            $data="";
-        }
-        $e = $this->_getDummyElement();
-        $array_field = array(
-            // this is groups[group name][fields][field name][value]
-            'name' => 'groups[payments][fields][group_' . $payment_method->getId() . $name . '][value]',
-            'label' => $label,
-            'value' => $data, 
-            'values' => $values,
-            'inherit' => $inherit,
-            'can_use_default_value' => $this->getForm()->canUseDefaultValue($e), 
-            'can_use_website_value' => $this->getForm()->canUseWebsiteValue($e)
-        );
-        
-        return array_merge($array_field,$extra_config);
+        return array('value' => $data, 'inherit' => $inherit);
     }
 }
