@@ -267,7 +267,7 @@ EOT;
                 ->__("Minutes after an order with this payment method is considered abandoned and canceled");
         
         $extra_data = array(   
-            'class' => "validate-digits validate-digits-range digits-range-0-6000",
+            'class' => "validate-digits validate-digits-range digits-range-0-999999",
             'comment' => $comment,
             'after_element_html' => $after_html,
         );

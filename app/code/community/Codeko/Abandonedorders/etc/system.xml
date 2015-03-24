@@ -29,7 +29,7 @@
                         <minutes translate="label">
                             <label>Cancel after</label>
                             <frontend_type>text</frontend_type>
-                            <validate>validate-digits required-entry validate-digits-range digits-range-0-6000</validate>
+                            <validate>validate-digits required-entry validate-digits-range digits-range-0-999999</validate>
                             <sort_order>20</sort_order>
                             <comment>Minutes after an order is considered abandoned and canceled</comment>
                             <show_in_default>1</show_in_default>
