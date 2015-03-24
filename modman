@@ -1,0 +1,4 @@
+app/code/community/Codeko/Abandonedorders/*	app/code/community/Codeko/Abandonedorders/
+app/etc/modules/Codeko_Abandonedorders.xml	app/etc/modules/Codeko_Abandonedorders.xml
+app/locale/en_US/Codeko_Abandonedorders.csv	app/locale/en_US/Codeko_Abandonedorders.csv
+app/locale/es_ES/Codeko_Abandonedorders.csv	app/locale/es_ES/Codeko_Abandonedorders.csv
