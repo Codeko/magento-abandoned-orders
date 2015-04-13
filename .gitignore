@@ -26,6 +26,9 @@
 !/app/locale/es_ES
 /app/locale/es_ES/*
 !/app/locale/es_ES/Codeko_Abandonedorders.csv
+!/app/locale/fr_FR
+/app/locale/fr_FR/*
+!/app/locale/fr_FR/Codeko_Abandonedorders.csv
 !.gitignore
 !modman
 

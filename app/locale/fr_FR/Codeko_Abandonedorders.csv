@@ -1,0 +1,35 @@
+Yes,Oui
+No,No
+Abandoned Orders,Commandes abandonnés
+Basic Settings,Réglages de base
+Cancel status,Annuler état
+Cancel after,Annuler après
+Enabled,Activé
+Enable automatic cancellation of abandoned orders,Activer annulation automatique des ordres abandonnés
+Minutes after an order is considered abandoned and canceled,Minutes après une commande est considérée comme abandonnée et annulées
+Ignore,Ignorer
+Order auto canceled,Commande annulée automatiquement
+Order states to be canceled,Commande pour être annuler
+Please select,S'il vous plaît sélectionnez
+Status Settings,Configuration d'etat
+Payment method's custom settings,Paramètres personnalisés des méthodes de paiement
+Which states can be auto canceled?,Quelles etats peuvent être auto annulée?
+Which status should be assigned to auto canceled orders?,Quel statut devrait être attribuée aux commandes de les annuler par défaut?
+New,Noveau
+Pending Payment,Pas encore de paiement
+Processing,En cours
+Complete,Terminée
+Closed,Fermé
+Canceled,Annulée
+On Hold,En attente
+Payment Review,Révision de paiement
+Default action,Action par défaut
+Auto cancel orders,Annuler automatiquement
+Ignore until I configure it,Ignorer jusqu'à ce que je l'ai configurée
+What should be done with not configured payments methods?,Qu'est-ce qu'il faut faire avec les formes de paiement non configurées ?
+Per payment method configuration,Configuration par forme de paiement
+Show all methods,Montrer tous les formes de paiement
+Hide disabled methods,Cacher des formes de paiement deshabilitadas
+Auto cancel,Annuler automatiquement
+Auto cancel after custom minutes,Annuler automatiquement après les minutes suivantes
+Abandoned order auto canceled,Commande négligée annulée automatiquement
