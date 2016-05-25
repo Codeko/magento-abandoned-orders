@@ -95,7 +95,7 @@ class Codeko_Abandonedorders_Model_Observer
      */
     protected function cancelOrder($order)
     {
-        if (!empty($order)) {
+        if (empty($order)) {
             return false;
         }
         try {    
@@ -110,7 +110,7 @@ class Codeko_Abandonedorders_Model_Observer
 
             $this->_checkIsCancelable($order_model);
 
-            if ($order_model->isCodekoAbandonedOrdersDoCancel()) {
+            if ($order_model->getCodekoAbandonedOrdersDoCancel()) {
                 $order_model->cancel();
             }
 
@@ -136,7 +136,7 @@ class Codeko_Abandonedorders_Model_Observer
      * @param Mage_Sales_Model_Order $order_model
      */
     protected function _checkIsCancelable(Mage_Sales_Model_Order $order_model) {
-        if ($order_model->isCodekoAbandonedOrdersDoCancel() &&
+        if ($order_model->getCodekoAbandonedOrdersDoCancel() &&
                 (!$order_model->canCancel() || $order_model->getState() === Mage_Sales_Model_Order::STATE_CANCELED)) {
             // It may be the case it is canceled in state but not in status
             $order_model->setCodekoAbandonedOrdersDoCancel(false);
